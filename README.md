@@ -37,7 +37,7 @@ python -m lookup -h
 python -m lookup -s 'first_name last_name'
 ```
   
-## Email search in spotify  
+## Email search in - spotify | duolingo  
 ```bash
 python -m lookup -e 'test@test.com'
 ```
