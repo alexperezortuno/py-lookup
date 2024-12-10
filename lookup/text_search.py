@@ -1,27 +1,24 @@
+from argparse import Namespace
 from urllib.parse import urlencode, urljoin
 
 from bs4 import BeautifulSoup
 from colorama import Fore
 from time import sleep
-
-from fake_useragent import UserAgent
 from requests import get, RequestException
-
-from lookup.core import renew_tor_ip, get_tor_session, get_session, get_headers
+from lookup.core import renew_tor_ip, get_tor_session, get_session, get_headers, get_results
 
 
 class TextSearch:
-
-    def search_ahmia(self, text: str, timeout: int=10) -> None:
+    @staticmethod
+    def search_ahmia(params: Namespace) -> None:
         try:
-            session = get_session()
             url = f"https://ahmia.fi/search/?"
-            params = {
-                'q': text
+            url_params = {
+                'q': params.text
             }
 
-            url_with_params = url + urlencode(params)
-            response = session.get(url_with_params, headers=get_headers(), timeout=timeout)
+            url_with_params = url + urlencode(url_params)
+            response = get_results(params, url_with_params)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, "html.parser")
             ahmia_results = [link["href"] for link in soup.find_all("a", href=True) if ".onion" in link["href"]]
@@ -40,19 +37,21 @@ class TextSearch:
         except RequestException as e:
             print(f"{Fore.LIGHTWHITE_EX}    •{Fore.LIGHTRED_EX} Failed to retrieve results from Ahmia: {e}")
 
-    def doxbin_search(self, text: str) -> None:
+    @staticmethod
+    def doxbin_search(params: Namespace) -> None:
+        text: str = params.search
         query = f"{text} site:doxbin.org"
         url = "https://www.google.com/search?"
-        params = {
+        url_params = {
             'q': query,
             'hl': 'en',
             'num': 10
         }
 
-        url_with_params = url + urlencode(params)
+        url_with_params = url + urlencode(url_params)
 
         try:
-            response = get(url_with_params, headers=get_headers())
+            response = get_results(params, url_with_params)
             response.raise_for_status()
 
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -72,4 +71,3 @@ class TextSearch:
                     print(f"{Fore.LIGHTWHITE_EX}    •{Fore.LIGHTGREEN_EX} Link{Fore.LIGHTWHITE_EX} :{Fore.LIGHTMAGENTA_EX} {urljoin(url_with_params, href)}")
         except RequestException as e:
             print(f"{Fore.LIGHTWHITE_EX}    •{Fore.LIGHTRED_EX} Error : {e}")
-            return None
