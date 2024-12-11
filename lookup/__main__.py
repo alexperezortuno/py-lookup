@@ -2,6 +2,7 @@ import argparse
 from argparse import Namespace
 
 from lookup.email_search import EmailSearch
+from lookup.number_search import NumberSearch
 from lookup.text_search import TextSearch
 
 
@@ -13,6 +14,7 @@ def main():
     parser.add_argument('-e', '--email', default='', type=str, help='Search for a given email')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
     parser.add_argument('--tor', action='store_true', help='Enable Tor proxy')
+    parser.add_argument('-n', '--number', default='', type=str, help='Search for a given number')
 
     args: Namespace = parser.parse_args()
 
@@ -21,10 +23,15 @@ def main():
         text.search_ahmia(args)
         text.doxbin_search(args)
 
-    if args.email is not None:
+    if args.email is not None and args.email != '':
         text = EmailSearch()
         text.check_spotify_email(args)
         text.check_duolingo_email(args)
+
+    if args.number is not None and args.number != '':
+        numbers = NumberSearch()
+        numbers.number_lookup(args)
+
 
 if __name__ == '__main__':
     main()

@@ -41,3 +41,8 @@ python -m lookup -s 'first_name last_name'
 ```bash
 python -m lookup -e 'test@test.com'
 ```
+
+## Phone number search
+```bash
+python -m lookup -n +56948161822
+```
