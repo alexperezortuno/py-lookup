@@ -4,6 +4,7 @@ from argparse import Namespace
 from lookup.email_search import EmailSearch
 from lookup.number_search import NumberSearch
 from lookup.text_search import TextSearch
+from lookup.username_search import UsernameSearch
 
 
 def main():
@@ -15,6 +16,8 @@ def main():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
     parser.add_argument('--tor', action='store_true', help='Enable Tor proxy')
     parser.add_argument('-n', '--number', default='', type=str, help='Search for a given number')
+    parser.add_argument('-u', '--username', default='', type=str, help='Search for a given username')
+    parser.add_argument('--webdriver', action='store_true', help='Use webdriver for searching')
 
     args: Namespace = parser.parse_args()
 
@@ -31,6 +34,10 @@ def main():
     if args.number is not None and args.number != '':
         numbers = NumberSearch()
         numbers.number_lookup(args)
+
+    if args.username is not None and args.username != '':
+        text = UsernameSearch()
+        text.username_lookup(args)
 
 
 if __name__ == '__main__':

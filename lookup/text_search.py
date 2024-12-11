@@ -1,4 +1,5 @@
 from argparse import Namespace
+from re import search
 from urllib.parse import urlencode, urljoin
 
 from bs4 import BeautifulSoup
@@ -12,9 +13,10 @@ class TextSearch:
     @staticmethod
     def search_ahmia(params: Namespace) -> None:
         try:
+            text: str = params.search
             url = f"https://ahmia.fi/search/?"
             url_params = {
-                'q': params.text
+                'q': text
             }
 
             url_with_params = url + urlencode(url_params)

@@ -18,6 +18,13 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+
 # ------------------------ Global variables ------------------------ #
 try:
     session = PromptSession(history=FileHistory('./.ph0mber_history'))
@@ -40,7 +47,7 @@ def get_tor_session():
 
 # Obtener nueva identidad en Tor
 def renew_tor_ip():
-    with Controller.from_port(port=9051) as controller:
+    with Controller.from_port(port=9050) as controller:
         controller.authenticate(
             password=os.getenv('TOR_PWD'))  # Cambia 'tu_password_de_tor' por la configuración de tu Tor
         controller.signal('NEWNYM')
@@ -107,33 +114,27 @@ def check_connection(params: Namespace):
         return False
 
 
-def printit(text, center='', line_up=False, line_down=False, space_up=False, space_down=False, coledt=[0, 0, 0],
-            normaltxt_start='', normaltxt_end='', hide=False, verbose_mode=False, input_mode=False):
-    if not hide or verbose_mode:
-        # get terminal width
-        width = os.get_terminal_size().columns
+def get_results_with_webdriver(params: Namespace, url: str) -> str:
+    timeout: int = params.timeout
+    is_tor_enabled: bool = params.tor
 
-        # printing text
-        if space_up: print()
-        if line_up: print('⸺' * width)
+    options = Options()
+    options.headless = True
+    service = Service('./lookup/drivers/chromedriver')  # Reemplaza con la ruta a tu chromedriver
 
-        print(normaltxt_start, end='')
+    if is_tor_enabled:
+        options.add_argument('--proxy-server=socks5://127.0.0.1:9050')
 
-        new_width = int((width - len(text)) / 2)
-        print(center * new_width, end='')
-        print(f'\33[{coledt[0]};{coledt[1]};{coledt[2]}m', end='')
-        # if input_mode: input_var = input(text)
-        if input_mode:
-            input_var = session.prompt(ANSI(text), auto_suggest=AutoSuggestFromHistory(),
-                                       completer=WordCompleter(available_commands))
-        else:
-            print(str(text), end='')
-        print('\033[0m', end='')
-        print(center * new_width)
+    driver = webdriver.Chrome(service=service, options=options)
+    driver.get(url)
 
-        print(normaltxt_end, end='')
+    try:
+        WebDriverWait(driver, timeout).until(
+            lambda d: all(len(section.find_elements(By.CLASS_NAME, 'fa-spin')) == 0
+                          for section in d.find_elements(By.CLASS_NAME, 'username-section'))
+        )
+        response = driver.page_source
+    finally:
+        driver.quit()
 
-        if line_down: print('⸺' * width)
-        if space_down: print()
-
-        if input_mode: return input_var
+    return response
